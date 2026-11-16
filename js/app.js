@@ -7,9 +7,10 @@
   var app = document.getElementById("app");
 
   var VOLUMES = [
-    { id: "C27", name: "AI 通识卷（300 题）", desc: "基础概念 · 技术体系 · 治理安全 · AI 与项目管理", diffs: ["基础", "进阶", "冲刺"] },
-    { id: "C29", name: "咨询顾问 AI", desc: "课程讲义配套 · 含单选与多选 · 讲次全覆盖", diffs: ["基础", "进阶", "冲刺"] }
+    { id: "C27", name: "AI通识300题", desc: "基础概念 · 技术体系 · 治理安全 · AI 与项目管理", diffs: ["基础", "进阶", "冲刺"] },
+    { id: "C29", name: "AI咨询测试题", desc: "课程讲义配套 · 含单选与多选 · 讲次全覆盖", diffs: ["基础", "进阶", "冲刺"] }
   ];
+  var MARK_REASONS = ["重点复习", "易错题", "好题"];
   var ALL_DIFFS = ["基础", "进阶", "冲刺"];
   var AUTO_SECONDS = 3;
 
@@ -119,6 +120,7 @@
     var m;
     if (h === "#/" || h === "") return renderHome();
     if (h === "#/wrong") return renderWrong();
+    if (h === "#/marked") return renderMarked();
     if (h === "#/data") return renderData();
     if (h === "#/mix") return renderMix();
     if ((m = h.match(/^#\/vol\/([ABC]\d{2})$/))) return renderVol(m[1]);
@@ -160,6 +162,13 @@
     wrongCard.appendChild(el("span", "resume-label", "错题清单"));
     wrongCard.appendChild(el("strong", null, wrongN === 0 ? "暂无错题" : wrongN + " 道错题待消灭"));
     app.appendChild(wrongCard);
+
+    var markedN = S.markedCount();
+    var markedCard = el("a", "resume-card marked-card");
+    markedCard.href = "#/marked";
+    markedCard.appendChild(el("span", "resume-label", "标记清单"));
+    markedCard.appendChild(el("strong", null, markedN === 0 ? "暂无标记" : markedN + " 道已标记 · 需手动取消"));
+    app.appendChild(markedCard);
 
     var mixCard = el("a", "resume-card mix-card");
     mixCard.href = "#/mix";
@@ -272,6 +281,8 @@
         info.appendChild(el("p", null, "已做：" + st.done + " 题 · 答对 " + st.right + " 题"));
         var wrongN = (S.wrongByNode()[nodeId] || []).length;
         if (wrongN) info.appendChild(el("p", "wrong-hint", "本卷错题：" + wrongN + " 道"));
+        var markN = (S.markedByNode()[nodeId] || []).length;
+        if (markN) info.appendChild(el("p", "mark-hint", "本卷标记：" + markN + " 道"));
         startBtn.disabled = !list.length;
         startBtn.textContent = !list.length ? "暂无题目"
           : (startPos > 0 && startPos < list.length) ? "从第 " + (startPos + 1) + " 题继续"
@@ -454,6 +465,81 @@
     });
     card.appendChild(optionsBox);
 
+    /* 标记区：答前答后都可标记，只有手动取消才移除 */
+    var markRow = el("div", "mark-row");
+    var markBtn = el("button", "secondary small mark-btn");
+    var markChips = el("div", "mark-chips hidden");
+    var customWrap = el("div", "mark-custom hidden");
+    var customInput = el("input");
+    customInput.type = "text";
+    customInput.placeholder = "自定义标记原因（20 字内）";
+    customInput.maxLength = 20;
+    var customOk = el("button", "primary small", "确定");
+    customWrap.appendChild(customInput);
+    customWrap.appendChild(customOk);
+
+    function refreshMark() {
+      var m = S.getMark(q.id);
+      if (m) {
+        markBtn.textContent = "⚑ 已标记：" + m.reason + "（点击修改）";
+        markBtn.className = "secondary small mark-btn marked";
+      } else {
+        markBtn.textContent = "⚑ 标记本题";
+        markBtn.className = "secondary small mark-btn";
+      }
+    }
+    function showChips() {
+      markChips.innerHTML = "";
+      MARK_REASONS.forEach(function (r) {
+        var c = el("button", "diff-chip", r);
+        c.addEventListener("click", function () {
+          S.addMark(q.id, q.node, r);
+          refreshMark();
+          markChips.classList.add("hidden");
+          customWrap.classList.add("hidden");
+          toast("已标记：" + r);
+        });
+        markChips.appendChild(c);
+      });
+      var cc = el("button", "diff-chip", "自定义…");
+      cc.addEventListener("click", function () {
+        customWrap.classList.remove("hidden");
+        customInput.focus();
+      });
+      markChips.appendChild(cc);
+      var cur = S.getMark(q.id);
+      if (cur) {
+        var rm = el("button", "diff-chip mark-remove", "取消标记");
+        rm.addEventListener("click", function () {
+          S.removeMark(q.id);
+          refreshMark();
+          markChips.classList.add("hidden");
+          customWrap.classList.add("hidden");
+          toast("已取消标记");
+        });
+        markChips.appendChild(rm);
+      }
+      markChips.classList.remove("hidden");
+    }
+    markBtn.addEventListener("click", function () {
+      if (markChips.classList.contains("hidden")) showChips();
+      else { markChips.classList.add("hidden"); customWrap.classList.add("hidden"); }
+    });
+    customOk.addEventListener("click", function () {
+      var v = customInput.value.trim();
+      if (!v) { toast("请输入标记原因"); return; }
+      S.addMark(q.id, q.node, v);
+      refreshMark();
+      markChips.classList.add("hidden");
+      customWrap.classList.add("hidden");
+      toast("已标记：" + v);
+    });
+    refreshMark();
+    markRow.appendChild(markBtn);
+    markRow.appendChild(markChips);
+    markRow.appendChild(customWrap);
+    card.appendChild(markRow);
+
     var submitBtn = null;
     if (isMulti) {
       submitBtn = el("button", "primary", "提交答案");
@@ -617,6 +703,80 @@
     });
   }
 
+  /* ---------- 标记清单 ---------- */
+  function findQuestion(qid) {
+    var parts = (qid || "").split("-");
+    var bank = Q.getBank(parts[0]);
+    if (!bank) return null;
+    for (var i = 0; i < bank.length; i++) if (bank[i].id === qid) return bank[i];
+    return null;
+  }
+
+  function renderMarked() {
+    app.innerHTML = "";
+    var back = el("a", "back-link", "← 返回首页"); back.href = "#/";
+    app.appendChild(back);
+    app.appendChild(el("h1", null, "标记清单"));
+    var byNode = S.markedByNode();
+    var total = S.markedCount();
+    app.appendChild(el("p", "sub", total === 0
+      ? "暂无标记。答题时点「标记本题」可加入这里，只有手动取消标记才会移除。"
+      : "共 " + total + " 道标记题 · 答对答错都不会自动移除，需手动取消标记。点题目可展开查看详情。"));
+
+    Object.keys(byNode).sort().forEach(function (nid) {
+      var meta = volMeta(nid);
+      var sec = el("div", "card");
+      var head = el("div", "wrong-node-head");
+      head.appendChild(el("h3", null, meta ? meta.name : nid));
+      sec.appendChild(head);
+      byNode[nid].forEach(function (qid) {
+        var m = S.getMark(qid);
+        var q = findQuestion(qid);
+        var row = el("div", "marked-row");
+        var main = el("div", "marked-main");
+
+        var toggle = el("button", "marked-toggle");
+        toggle.appendChild(el("strong", "marked-qid", qid));
+        var reason = el("span", "mark-reason", m.reason);
+        toggle.appendChild(reason);
+        toggle.appendChild(el("span", "marked-time", fmtTime(m.at)));
+        main.appendChild(toggle);
+
+        var preview = el("p", "marked-stem", q ? q.stem : "（未在题库中找到该题）");
+        main.appendChild(preview);
+
+        var detail = el("div", "marked-detail hidden");
+        if (q) {
+          detail.appendChild(el("p", "explain-p", q.stem));
+          Q.optionKeys(q).forEach(function (k) {
+            var ans = q.type === "multi" ? (q.answer || []).indexOf(k) >= 0 : k === q.answer;
+            detail.appendChild(el("p", ans ? "marked-opt right" : "marked-opt",
+              (ans ? "✓ " : "") + k + ". " + q.options[k]));
+          });
+          var aline = q.type === "multi" ? "正确答案：" + q.answer.join("") : "正确答案：" + q.answer;
+          detail.appendChild(el("p", "answer-line", aline));
+          if (q.explain) detail.appendChild(el("p", "explain-p", q.explain));
+          if (q.source) detail.appendChild(el("p", "source-line", "出处：" + q.source));
+        }
+        main.appendChild(detail);
+
+        toggle.addEventListener("click", function () {
+          detail.classList.toggle("hidden");
+        });
+
+        row.appendChild(main);
+        var rm = el("button", "danger small", "取消标记");
+        rm.addEventListener("click", function () {
+          S.removeMark(qid);
+          renderMarked();
+        });
+        row.appendChild(rm);
+        sec.appendChild(row);
+      });
+      app.appendChild(sec);
+    });
+  }
+
   /* ---------- 数据页 ---------- */
   function renderData() {
     app.innerHTML = "";
@@ -633,6 +793,7 @@
     var card = el("div", "card");
     card.appendChild(el("p", null, "作答记录：" + answeredN + " 条"));
     card.appendChild(el("p", null, "错题本：" + S.wrongCount() + " 道"));
+    card.appendChild(el("p", null, "标记题：" + S.markedCount() + " 道"));
     card.appendChild(el("p", null, "访问记录：" + S.getVisits().length + " 条"));
     card.appendChild(el("p", null, "存储占用：约 " + Math.round(S.usageBytes() / 1024) + " KB（限额约 5MB）"));
     card.appendChild(el("p", "muted small-text", "以上数据仅保存在本机浏览器 localStorage 中，不会上传。换浏览器或清除缓存前请先导出备份。"));

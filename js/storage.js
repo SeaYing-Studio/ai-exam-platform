@@ -6,6 +6,7 @@
   var KEYS = {
     progress: PREFIX + "progress_v1",
     wrong: PREFIX + "wrong_v1",
+    marked: PREFIX + "marked_v1",
     visit: PREFIX + "visit_v1",
     settings: PREFIX + "settings_v1"
   };
@@ -137,6 +138,46 @@
     saveWrong();
   }
 
+  /* 标记本：仅手工取消才移除，与对错无关 */
+  var markBook = read(KEYS.marked, {});
+
+  function saveMarked() { write(KEYS.marked, markBook); }
+
+  // reason: "重点复习" | "易错题" | "好题" | 其他自定义文本
+  function addMark(qid, node, reason) {
+    var e = markBook[qid];
+    if (e) {
+      e.reason = reason || "重点复习";
+      e.at = Date.now();
+    } else {
+      markBook[qid] = {
+        node: node,
+        reason: reason || "重点复习",
+        at: Date.now()
+      };
+    }
+    saveMarked();
+  }
+
+  function removeMark(qid) {
+    if (!markBook[qid]) return false;
+    delete markBook[qid];
+    saveMarked();
+    return true;
+  }
+
+  function getMark(qid) { return markBook[qid] || null; }
+  function markedCount() { return Object.keys(markBook).length; }
+  function markedIds() { return Object.keys(markBook); }
+  function markedByNode() {
+    var g = {};
+    for (var qid in markBook) {
+      var n = markBook[qid].node;
+      (g[n] = g[n] || []).push(qid);
+    }
+    return g;
+  }
+
   /* 访问记录：最近 200 条 */
   var visits = read(KEYS.visit, []);
 
@@ -159,6 +200,7 @@
       exportedAt: new Date().toISOString(),
       progress: progress,
       wrong: wrongBook,
+      marked: markBook,
       visits: visits,
       settings: settings
     };
@@ -168,6 +210,7 @@
     if (!data || typeof data !== "object") return false;
     if (data.progress) { progress = data.progress; write(KEYS.progress, progress); }
     if (data.wrong) { wrongBook = data.wrong; write(KEYS.wrong, wrongBook); }
+    if (data.marked) { markBook = data.marked; write(KEYS.marked, markBook); }
     if (data.visits) { visits = data.visits; write(KEYS.visit, visits); }
     if (data.settings) { settings = data.settings; write(KEYS.settings, settings); }
     return true;
@@ -176,6 +219,7 @@
   function clearAll() {
     progress = { answered: {}, pos: {} };
     wrongBook = {};
+    markBook = {};
     visits = [];
     settings = { diffFilter: "all" };
     for (var k in KEYS) {
@@ -183,6 +227,7 @@
     }
     write(KEYS.progress, progress);
     write(KEYS.wrong, wrongBook);
+    write(KEYS.marked, markBook);
     write(KEYS.visit, visits);
     write(KEYS.settings, settings);
   }
@@ -211,6 +256,12 @@
     wrongIds: wrongIds,
     wrongByNode: wrongByNode,
     removeWrong: removeWrong,
+    addMark: addMark,
+    removeMark: removeMark,
+    getMark: getMark,
+    markedCount: markedCount,
+    markedIds: markedIds,
+    markedByNode: markedByNode,
     logVisit: logVisit,
     getVisits: getVisits,
     getSettings: getSettings,

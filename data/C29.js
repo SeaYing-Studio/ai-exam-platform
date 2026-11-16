@@ -1,7 +1,7 @@
 // C29 咨询顾问AI 187 题 — 由 tools/import_consultant_ai.py 从原始 Markdown 转换
 window.EXAM_BANK_C29 = {
  "node": "C29",
- "name": "咨询顾问AI",
+ "name": "AI咨询测试题",
  "diffs": [
   "基础",
   "进阶",

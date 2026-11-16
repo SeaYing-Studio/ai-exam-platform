@@ -1,6 +1,6 @@
 window.EXAM_BANK_C27 = {
   node: "C27",
-  name: "AI 通识卷（300 题）",
+  name: "AI通识300题",
   diffs: ["基础", "进阶", "冲刺"],
   questions: [
  {

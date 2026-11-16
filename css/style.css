@@ -95,6 +95,8 @@ a:hover { text-decoration: underline; }
 .wrong-card:hover { background: var(--bad-soft); }
 .mix-card { border-color: #7f77dd; }
 .mix-card:hover { background: #eeedfe; }
+.marked-card { border-color: #9a6b00; }
+.marked-card:hover { background: #fff7e6; }
 
 .progress-bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; }
 .progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
@@ -168,6 +170,24 @@ button.small { padding: 6px 12px; font-size: 0.84rem; font-weight: 500; }
 .mode-actions { display: flex; flex-wrap: wrap; margin-top: 14px; }
 .node-info p { margin: 4px 0; }
 .wrong-hint { color: var(--bad); }
+.mark-hint { color: #9a6b00; }
+
+/* 答题页标记按钮 */
+.mark-row { margin: 2px 0 12px; }
+.mark-btn { background: #fff7e6; color: #9a6b00; }
+.mark-btn.marked { background: #fdf0d0; border: 1px solid #e6c979; }
+.mark-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.mark-remove { color: var(--bad) !important; border-color: #e6b0aa !important; }
+.mark-custom { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.mark-custom input {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  font-size: 0.9rem;
+}
 
 /* 答题 */
 .progress-line { color: var(--muted); font-size: 0.9rem; margin: 0 0 10px; }
@@ -235,6 +255,54 @@ button.small { padding: 6px 12px; font-size: 0.84rem; font-weight: 500; }
 .wrong-qid { color: var(--muted); font-family: Consolas, monospace; font-size: 0.82rem; flex-shrink: 0; }
 .wrong-info { flex: 1; }
 .visit-row { font-size: 0.86rem; color: var(--muted); margin: 4px 0; }
+
+/* 标记清单 */
+.marked-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+}
+.marked-main { flex: 1; min-width: 0; }
+.marked-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--text);
+}
+.marked-qid { font-family: Consolas, monospace; font-size: 0.85rem; }
+.mark-reason {
+  font-size: 0.74rem;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #fff7e6;
+  border: 1px solid #f0d9a0;
+  color: #9a6b00;
+}
+.marked-time { font-size: 0.78rem; color: var(--muted); }
+.marked-stem {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.marked-detail {
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 8px 14px;
+  margin-top: 8px;
+}
+.marked-opt { margin: 4px 0; font-size: 0.9rem; }
+.marked-opt.right { color: var(--ok); font-weight: 600; }
 
 /* toast */
 .toast {
