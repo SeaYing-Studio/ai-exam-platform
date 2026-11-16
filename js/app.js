@@ -11,6 +11,9 @@
     { id: "C29", name: "AI咨询测试题", desc: "课程讲义配套 · 含单选与多选 · 讲次全覆盖", diffs: ["基础", "进阶", "冲刺"] }
   ];
   var MARK_REASONS = ["重点复习", "易错题", "好题"];
+  var LIKE_API = "https://countapi.mileshilliard.com/api/v1";
+  var LIKE_KEY = "seaying-ai-exam-likes";
+  var LIKE_LOCAL_KEY = "aiexam_like_local_v1";
   var ALL_DIFFS = ["基础", "进阶", "冲刺"];
   var AUTO_SECONDS = 3;
 
@@ -70,6 +73,88 @@
     t.className = "toast show";
     clearTimeout(toast._timer);
     toast._timer = setTimeout(function () { t.className = "toast"; }, 2200);
+  }
+
+  /* ---------- 首页点赞（在线累计，失败降级为本地） ---------- */
+  function readLocalLikes() {
+    var n = 0;
+    try { n = parseInt(localStorage.getItem(LIKE_LOCAL_KEY) || "0", 10) || 0; } catch (e) { /* ignore */ }
+    return n;
+  }
+  function writeLocalLikes(n) {
+    try { localStorage.setItem(LIKE_LOCAL_KEY, String(n)); } catch (e) { /* ignore */ }
+  }
+
+  function renderLikeBar(head) {
+    var bar = el("div", "like-bar");
+    var btn = el("button", "like-btn");
+    var num = el("span", "like-num", "…");
+    btn.appendChild(el("span", "like-icon", "♥"));
+    btn.appendChild(num);
+    bar.appendChild(btn);
+    bar.appendChild(el("span", "like-label", "觉得有用？点个赞"));
+
+    var localBase = readLocalLikes();
+    var onlineOK = false;
+
+    function show(n) { num.textContent = String(n); }
+
+    function fetchCount(inc) {
+      var url = LIKE_API + "/" + (inc ? "hit" : "get") + "/" + LIKE_KEY + "?_=" + Date.now();
+      return new Promise(function (resolve, reject) {
+        var done = false;
+        var timer = setTimeout(function () {
+          if (!done) { done = true; reject(new Error("timeout")); }
+        }, 6000);
+        fetch(url, { cache: "no-store", mode: "cors" })
+          .then(function (r) {
+            if (!r.ok) throw new Error("http " + r.status);
+            return r.json();
+          })
+          .then(function (data) {
+            if (done) return;
+            done = true; clearTimeout(timer);
+            resolve(parseInt(data.value, 10) || 0);
+          })
+          .catch(function (e) {
+            if (done) return;
+            done = true; clearTimeout(timer);
+            reject(e);
+          });
+      });
+    }
+
+    fetchCount(false).then(function (n) {
+      onlineOK = true;
+      show(n);
+    }).catch(function () {
+      show(localBase);
+    });
+
+    btn.addEventListener("click", function () {
+      btn.disabled = true;
+      if (onlineOK) {
+        fetchCount(true).then(function (n) {
+          show(n);
+          toast("感谢点赞！");
+          btn.disabled = false;
+        }).catch(function () {
+          var n = readLocalLikes() + 1;
+          writeLocalLikes(n);
+          show(n + "（本地）");
+          toast("网络不可用，点赞已记在本机");
+          btn.disabled = false;
+        });
+      } else {
+        var n2 = readLocalLikes() + 1;
+        writeLocalLikes(n2);
+        show(n2 + "（本地）");
+        toast("网络不可用，点赞已记在本机");
+        btn.disabled = false;
+      }
+    });
+
+    head.appendChild(bar);
   }
 
   /* ---------- 倒计时管理 ---------- */
@@ -136,7 +221,8 @@
     app.innerHTML = "";
     var head = el("div", "home-head");
     head.appendChild(el("h1", null, "AI 考试刷题平台"));
-    head.appendChild(el("p", "sub", "AI 通识卷 300 题 · 咨询顾问 AI 187 题 · 答对自动进入下一题 · 数据只存本机浏览器"));
+    head.appendChild(el("p", "sub", "AI通识300题 · AI咨询测试题 · 答对自动进入下一题 · 学习数据只存本机浏览器"));
+    renderLikeBar(head);
     app.appendChild(head);
 
     if (!S.storageOK) {
@@ -173,7 +259,7 @@
     var mixCard = el("a", "resume-card mix-card");
     mixCard.href = "#/mix";
     mixCard.appendChild(el("span", "resume-label", "混合练习"));
-    mixCard.appendChild(el("strong", null, "两卷随机抽题 · 30 / 50 / 100 题"));
+    mixCard.appendChild(el("strong", null, "两卷随机抽题 · 20 / 30 / 50 题"));
     app.appendChild(mixCard);
 
     app.appendChild(el("h2", null, "刷题入口"));
@@ -325,7 +411,7 @@
         info.appendChild(el("p", "bank-missing", "当前筛选条件下暂无题目。"));
         return;
       }
-      [30, 50, 100].forEach(function (n) {
+      [20, 30, 50].forEach(function (n) {
         var btn = el("button", "primary", "抽 " + Math.min(n, total) + " 题");
         btn.addEventListener("click", function () {
           startMix(n);

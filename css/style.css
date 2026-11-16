@@ -51,6 +51,32 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .back-link { display: inline-block; margin-bottom: 12px; font-size: 0.9rem; }
 
+/* 首页点赞 */
+.like-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 4px 0 16px;
+  flex-wrap: wrap;
+}
+.like-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--card);
+  border: 1px solid #e6b0aa;
+  border-radius: 999px;
+  padding: 6px 16px;
+  color: var(--bad);
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.like-btn:hover { background: var(--bad-soft); }
+.like-btn:disabled { opacity: 0.6; }
+.like-icon { font-size: 1.1rem; line-height: 1; }
+.like-num { font-variant-numeric: tabular-nums; }
+.like-label { color: var(--muted); font-size: 0.86rem; }
+
 .warn-bar {
   background: var(--warn-soft);
   border: 1px solid #e6d9a8;
