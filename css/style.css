@@ -51,31 +51,40 @@ a { color: var(--accent); text-decoration: none; }
 a:hover { text-decoration: underline; }
 .back-link { display: inline-block; margin-bottom: 12px; font-size: 0.9rem; }
 
-/* 首页点赞 */
-.like-bar {
+/* 首页点赞（底部居中，点击撒花） */
+.like-zone {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 10px;
-  margin: 4px 0 16px;
-  flex-wrap: wrap;
+  gap: 8px;
+  margin: 34px 0 6px;
 }
 .like-btn {
-  display: inline-flex;
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  border: 0;
+  background: linear-gradient(145deg, #ffd75e 0%, #f5b301 100%);
+  box-shadow: 0 6px 18px rgba(240, 170, 0, 0.38);
+  display: flex;
   align-items: center;
-  gap: 6px;
-  background: var(--card);
-  border: 1px solid #e6b0aa;
-  border-radius: 999px;
-  padding: 6px 16px;
-  color: var(--bad);
-  font-size: 0.95rem;
-  font-weight: 600;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.like-btn:hover { background: var(--bad-soft); }
-.like-btn:disabled { opacity: 0.6; }
-.like-icon { font-size: 1.1rem; line-height: 1; }
+.like-btn:hover { transform: translateY(-2px) scale(1.05); box-shadow: 0 10px 22px rgba(240, 170, 0, 0.45); }
+.like-btn:disabled { opacity: 0.85; cursor: default; }
+.like-btn.like-pop { animation: like-pop 0.38s ease; }
+@keyframes like-pop {
+  0% { transform: scale(1); }
+  35% { transform: scale(0.86); }
+  70% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+.like-svg { width: 40px; height: 40px; fill: #fff; display: block; }
+.like-caption { color: var(--muted); font-size: 0.95rem; font-weight: 600; }
 .like-num { font-variant-numeric: tabular-nums; }
-.like-label { color: var(--muted); font-size: 0.86rem; }
+.confetti-piece { position: fixed; z-index: 9999; pointer-events: none; border-radius: 1px; }
 
 .warn-bar {
   background: var(--warn-soft);

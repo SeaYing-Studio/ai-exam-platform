@@ -85,14 +85,50 @@
     try { localStorage.setItem(LIKE_LOCAL_KEY, String(n)); } catch (e) { /* ignore */ }
   }
 
-  function renderLikeBar(head) {
-    var bar = el("div", "like-bar");
+  // 撒花动画：彩色纸屑从按钮位置向上喷发，纯前端实现，无第三方依赖
+  function burstConfetti(anchor) {
+    if (!anchor || typeof anchor.animate !== "function") return;
+    var rect = anchor.getBoundingClientRect();
+    var cx = rect.left + rect.width / 2;
+    var cy = rect.top + rect.height / 2;
+    var colors = ["#ffd43b", "#ff6b6b", "#4dabf7", "#51cf66", "#b197fc", "#ff922b", "#f783ac", "#22b8cf"];
+    for (var i = 0; i < 70; i++) {
+      var p = document.createElement("i");
+      p.className = "confetti-piece";
+      var w = 5 + Math.random() * 7;
+      p.style.width = w + "px";
+      p.style.height = (Math.random() > 0.45 ? w : w * 2.4) + "px";
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      if (Math.random() > 0.6) p.style.borderRadius = "50%";
+      p.style.left = cx + "px";
+      p.style.top = cy + "px";
+      document.body.appendChild(p);
+      var angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.7;
+      var power = 90 + Math.random() * 150;
+      var dx = Math.cos(angle) * power;
+      var dy = Math.sin(angle) * power;
+      var spin = (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 540);
+      var anim = p.animate([
+        { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
+        { transform: "translate(-50%, -50%) translate(" + (dx * 0.65).toFixed(1) + "px," + (dy * 0.55 - 25).toFixed(1) + "px) rotate(" + Math.round(spin * 0.6) + "deg)", opacity: 1, offset: 0.55 },
+        { transform: "translate(-50%, -50%) translate(" + dx.toFixed(1) + "px," + (dy + 130).toFixed(1) + "px) rotate(" + Math.round(spin) + "deg)", opacity: 0 }
+      ], { duration: 1000 + Math.random() * 700, easing: "cubic-bezier(0.12, 0.7, 0.35, 1)" });
+      anim.onfinish = (function (node) { return function () { node.remove(); }; })(p);
+    }
+  }
+
+  function renderLikeBar(parent) {
+    var zone = el("div", "like-zone");
     var btn = el("button", "like-btn");
+    btn.type = "button";
+    btn.setAttribute("aria-label", "点赞");
+    btn.innerHTML = '<svg class="like-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/></svg>';
+    var caption = el("div", "like-caption");
     var num = el("span", "like-num", "…");
-    btn.appendChild(el("span", "like-icon", "♥"));
-    btn.appendChild(num);
-    bar.appendChild(btn);
-    bar.appendChild(el("span", "like-label", "觉得有用？点个赞"));
+    caption.appendChild(document.createTextNode("点赞 "));
+    caption.appendChild(num);
+    zone.appendChild(btn);
+    zone.appendChild(caption);
 
     var localBase = readLocalLikes();
     var onlineOK = false;
@@ -132,6 +168,10 @@
     });
 
     btn.addEventListener("click", function () {
+      burstConfetti(btn);
+      btn.classList.remove("like-pop");
+      void btn.offsetWidth;
+      btn.classList.add("like-pop");
       btn.disabled = true;
       if (onlineOK) {
         fetchCount(true).then(function (n) {
@@ -154,7 +194,7 @@
       }
     });
 
-    head.appendChild(bar);
+    parent.appendChild(zone);
   }
 
   /* ---------- 倒计时管理 ---------- */
@@ -222,7 +262,6 @@
     var head = el("div", "home-head");
     head.appendChild(el("h1", null, "AI 考试刷题平台"));
     head.appendChild(el("p", "sub", "AI通识300题 · AI咨询测试题 · 答对自动进入下一题 · 学习数据只存本机浏览器"));
-    renderLikeBar(head);
     app.appendChild(head);
 
     if (!S.storageOK) {
@@ -298,6 +337,7 @@
     var a2 = el("a", null, "本地数据"); a2.href = "#/data";
     foot.appendChild(a2);
     app.appendChild(foot);
+    renderLikeBar(app);
     S.logVisit("home", "");
   }
 
