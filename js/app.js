@@ -92,7 +92,7 @@
     var cx = rect.left + rect.width / 2;
     var cy = rect.top + rect.height / 2;
     var colors = ["#ffd43b", "#ff6b6b", "#4dabf7", "#51cf66", "#b197fc", "#ff922b", "#f783ac", "#22b8cf"];
-    for (var i = 0; i < 70; i++) {
+    for (var i = 0; i < 90; i++) {
       var p = document.createElement("i");
       p.className = "confetti-piece";
       var w = 5 + Math.random() * 7;
@@ -100,19 +100,26 @@
       p.style.height = (Math.random() > 0.45 ? w : w * 2.4) + "px";
       p.style.background = colors[Math.floor(Math.random() * colors.length)];
       if (Math.random() > 0.6) p.style.borderRadius = "50%";
-      p.style.left = cx + "px";
-      p.style.top = cy + "px";
+      // 起点轻微抖动，避免所有纸屑从同一像素射出
+      p.style.left = (cx + (Math.random() - 0.5) * 26).toFixed(1) + "px";
+      p.style.top = (cy + (Math.random() - 0.5) * 18).toFixed(1) + "px";
       document.body.appendChild(p);
-      var angle = -Math.PI / 2 + (Math.random() - 0.5) * 1.7;
-      var power = 90 + Math.random() * 150;
+      // 扇形角度与抛射距离约翻倍，落点带重力下坠
+      var angle = -Math.PI / 2 + (Math.random() - 0.5) * 2.4;
+      var power = 160 + Math.random() * 260;
       var dx = Math.cos(angle) * power;
       var dy = Math.sin(angle) * power;
-      var spin = (Math.random() > 0.5 ? 1 : -1) * (180 + Math.random() * 540);
+      var fall = 170 + Math.random() * 130;
+      var spin = (Math.random() > 0.5 ? 1 : -1) * (240 + Math.random() * 720);
+      var lift = 0.6 + Math.random() * 0.2;
+      var peak = 0.3 + Math.random() * 0.12;
       var anim = p.animate([
-        { transform: "translate(-50%, -50%) translate(0px, 0px) rotate(0deg)", opacity: 1 },
-        { transform: "translate(-50%, -50%) translate(" + (dx * 0.65).toFixed(1) + "px," + (dy * 0.55 - 25).toFixed(1) + "px) rotate(" + Math.round(spin * 0.6) + "deg)", opacity: 1, offset: 0.55 },
-        { transform: "translate(-50%, -50%) translate(" + dx.toFixed(1) + "px," + (dy + 130).toFixed(1) + "px) rotate(" + Math.round(spin) + "deg)", opacity: 0 }
-      ], { duration: 1000 + Math.random() * 700, easing: "cubic-bezier(0.12, 0.7, 0.35, 1)" });
+        { transform: "translate(-50%, -50%) translate(0px, 0px) scale(0.3) rotate(0deg)", opacity: 0, offset: 0, easing: "cubic-bezier(0.1, 0.7, 0.3, 1)" },
+        { transform: "translate(-50%, -50%) translate(" + (dx * 0.18).toFixed(1) + "px," + (dy * 0.18).toFixed(1) + "px) scale(1) rotate(" + Math.round(spin * 0.1) + "deg)", opacity: 1, offset: 0.06 },
+        { transform: "translate(-50%, -50%) translate(" + (dx * lift).toFixed(1) + "px," + (dy * lift).toFixed(1) + "px) rotate(" + Math.round(spin * 0.45) + "deg)", opacity: 1, offset: peak, easing: "cubic-bezier(0.35, 0, 0.7, 0.95)" },
+        { transform: "translate(-50%, -50%) translate(" + dx.toFixed(1) + "px," + dy.toFixed(1) + "px) rotate(" + Math.round(spin * 0.8) + "deg)", opacity: 1, offset: 0.66, easing: "cubic-bezier(0.45, 0, 0.85, 0.8)" },
+        { transform: "translate(-50%, -50%) translate(" + (dx * 1.12).toFixed(1) + "px," + (dy + fall).toFixed(1) + "px) rotate(" + Math.round(spin) + "deg)", opacity: 0, offset: 1 }
+      ], { duration: 1500 + Math.random() * 700, delay: Math.random() * 160, fill: "both" });
       anim.onfinish = (function (node) { return function () { node.remove(); }; })(p);
     }
   }
