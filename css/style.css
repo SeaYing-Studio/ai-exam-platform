@@ -260,12 +260,20 @@ button.small { padding: 6px 12px; font-size: 0.84rem; font-weight: 500; }
 .source-line { color: var(--muted); font-size: 0.82rem; margin-top: 10px; }
 
 /* 3 秒自动进入下一题 */
-.auto-row { margin: 12px 0 4px; }
+.auto-row { margin: 12px 0 2px; }
 .auto-text { color: var(--ok); font-size: 0.9rem; font-weight: 600; }
-.auto-bar { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 6px 0 8px; }
+.auto-bar { height: 5px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 6px 0 4px; }
 .auto-fill { height: 100%; background: var(--ok); border-radius: 3px; transition: width 1s linear; }
 
-.nav-row { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 6px; flex-wrap: wrap; }
+.nav-row { display: flex; justify-content: flex-end; align-items: center; gap: 10px; margin-top: 4px; flex-wrap: wrap; }
+.nav-row button { margin: 0; min-width: 136px; }
+.primary.jump-btn {
+  background: var(--ok);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 3px 10px rgba(22, 128, 60, 0.26);
+}
+.primary.jump-btn:hover { background: #106a31; }
 
 /* 完成页 */
 .done-card { text-align: center; padding: 32px 18px; }

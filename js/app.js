@@ -222,12 +222,15 @@
     var fill = el("div", "auto-fill");
     fill.style.width = "100%";
     bar.appendChild(fill);
-    var nowBtn = el("button", "secondary small", "立即下一题");
+    var nowBtn = el("button", "primary jump-btn", "立即下一题");
     row.appendChild(txt);
     row.appendChild(bar);
-    row.appendChild(nowBtn);
     var card = app.querySelector(".card");
-    if (card) card.insertBefore(row, card.querySelector(".nav-row"));
+    var nav = card ? card.querySelector(".nav-row") : null;
+    if (card) card.insertBefore(row, nav);
+    // 与「下一题」并排放在导航行，保持水平对齐
+    if (nav) nav.insertBefore(nowBtn, nav.firstChild);
+    else row.appendChild(nowBtn);
 
     function finish() {
       clearAutoTimer();
